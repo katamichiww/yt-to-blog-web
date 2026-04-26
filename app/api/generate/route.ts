@@ -58,7 +58,33 @@ Blog post requirements:
 - Bullet points for lists of steps or tips
 - Bold key terms or takeaways
 - End with one concrete next step or call to action
-- Sound human and specific — real examples over vague generalities${voiceSection}${sampleSection}${keywordSection}${referenceSection}
+- Sound human and specific — real examples over vague generalities
+- Internal linking: where the content is relevant, naturally link to real pages on anchrlabs.com using markdown links. Only use URLs from this exact list — do not invent slugs:
+  • https://anchrlabs.com/blog/how-i-launched-anchr-ai-labs-website-under-24-hours/
+  • https://anchrlabs.com/claude-cowork-training/
+  • https://anchrlabs.com/claude-cowork-training/what-is-claude-cowork/
+  • https://anchrlabs.com/claude-cowork-training/claude-cowork-vs-claude/
+  • https://anchrlabs.com/claude-cowork-training/claude-cowork-workflows/
+  • https://anchrlabs.com/claude-cowork-training/claude-cowork-for-teams/
+  • https://anchrlabs.com/claude-cowork-training/claude-cowork-vs-chatgpt/
+  • https://anchrlabs.com/claude-cowork-training/claude-cowork-review/
+  • https://anchrlabs.com/claude-code-non-technical/
+  • https://anchrlabs.com/claude-code-non-technical/what-is-claude-code/
+  • https://anchrlabs.com/claude-code-non-technical/claude-code-vs-cowork/
+  • https://anchrlabs.com/claude-code-non-technical/claude-code-without-coding/
+  • https://anchrlabs.com/claude-code-non-technical/claude-code-for-business-owners/
+  • https://anchrlabs.com/claude-code-non-technical/claude-code-use-cases/
+  • https://anchrlabs.com/claude-code-non-technical/claude-code-setup-beginners/
+  • https://anchrlabs.com/claude-code-non-technical/claude-code-vs-github-copilot/
+  • https://anchrlabs.com/claude-code-non-technical/vibe-coding-guide/
+  • https://anchrlabs.com/ai-training-singapore/
+  • https://anchrlabs.com/ai-training-singapore/why-ai-training-fails/
+  • https://anchrlabs.com/ai-training-singapore/case-study-55-year-old-ai-workflow/
+  • https://anchrlabs.com/ai-training-singapore/what-is-an-ai-native-professional/
+  • https://anchrlabs.com/ai-training-singapore/ai-wont-replace-you-but-this-will/
+  • https://anchrlabs.com/ai-training-singapore/what-corporates-want-from-ai-training-2026/
+  • https://anchrlabs.com/ai-consulting-singapore/
+  Only add links where they genuinely fit the topic — 2 to 4 internal links maximum, woven naturally into the prose.${voiceSection}${sampleSection}${keywordSection}${referenceSection}
 
 Output format: Return ONLY raw markdown. Start directly with the YAML frontmatter. No code fences, no preamble.
 
