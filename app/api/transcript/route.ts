@@ -1,8 +1,5 @@
-// Run on Vercel Edge (Cloudflare PoPs) instead of AWS Lambda.
-// YouTube restricts caption data for AWS datacenter IPs — Edge IPs are different.
-export const runtime = 'edge';
-
 import { NextRequest, NextResponse } from 'next/server';
+import { YoutubeTranscript as YtPlus } from 'youtube-transcript-plus';
 
 function extractVideoId(url: string): string {
   const patterns = [
@@ -171,9 +168,16 @@ async function viaDirect(videoId: string): Promise<string> {
   return texts.join(' ');
 }
 
+async function viaPackage(videoId: string): Promise<string> {
+  const segs = await YtPlus.fetchTranscript(videoId);
+  if (!segs?.length || segs.length < 5) throw new Error(`Only ${segs?.length ?? 0} segments`);
+  return segs.map(s => decodeEntities(s.text)).join(' ');
+}
+
 async function getTranscript(videoId: string): Promise<string> {
   const errors: string[] = [];
   for (const [name, fn] of [
+    ['package', () => viaPackage(videoId)],
     ['android', () => viaAndroid(videoId)],
     ['ios', () => viaIos(videoId)],
     ['direct', () => viaDirect(videoId)],

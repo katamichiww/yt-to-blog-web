@@ -79,7 +79,6 @@ Write the blog post in the creator's voice.`;
     const stream = await client.messages.stream({
       model: 'claude-opus-4-7',
       max_tokens: 4096,
-      thinking: { type: 'enabled', budget_tokens: 1024 },
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     });
