@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'A valid Anthropic API key is required.' }, { status: 401 });
   }
 
-  const { url, title, author, transcript, keywords, tone, sentenceStyle, loves, avoids, writingSample } = await req.json();
+  const { url, title, author, transcript, keywords, tone, sentenceStyle, loves, avoids, writingSample, referenceArticles } = await req.json();
 
   const client = new Anthropic({ apiKey });
 
@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
     ? `\n\nWriting sample from this author — study and mirror their rhythm, vocabulary, and phrasing:\n"""\n${writingSample.slice(0, 2000)}\n"""`
     : '';
 
+  const referenceSection = referenceArticles?.trim()
+    ? `\n\nReference articles — use these to understand the target SEO context, competitor framing, and the level of depth expected. Do not copy. Use them to position this post better:\n"""\n${referenceArticles.slice(0, 4000)}\n"""`
+    : '';
+
   const keywordSection = keywords?.trim()
     ? `\n\nTarget keywords to weave in naturally (no stuffing): ${keywords}. Use in title, description, and 2–3 times in the body where relevant.`
     : '';
@@ -54,7 +58,7 @@ Blog post requirements:
 - Bullet points for lists of steps or tips
 - Bold key terms or takeaways
 - End with one concrete next step or call to action
-- Sound human and specific — real examples over vague generalities${voiceSection}${sampleSection}${keywordSection}
+- Sound human and specific — real examples over vague generalities${voiceSection}${sampleSection}${keywordSection}${referenceSection}
 
 Output format: Return ONLY raw markdown. Start directly with the YAML frontmatter. No code fences, no preamble.
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import StarField from './components/StarField';
 
@@ -52,6 +52,7 @@ const AVOIDS_OPTIONS = [
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
+  const [keySaved, setKeySaved] = useState(false);
   const [url, setUrl] = useState('');
   const [keywords, setKeywords] = useState('');
   const [tone, setTone] = useState('casual');
@@ -59,11 +60,53 @@ export default function Home() {
   const [loves, setLoves] = useState<string[]>([]);
   const [avoids, setAvoids] = useState<string[]>([]);
   const [writingSample, setWritingSample] = useState('');
+  const [referenceArticles, setReferenceArticles] = useState('');
+  const [voiceSaved, setVoiceSaved] = useState(false);
+  const [articlesSaved, setArticlesSaved] = useState(false);
   const [step, setStep] = useState<Step>('idle');
   const [error, setError] = useState('');
   const [data, setData] = useState<TranscriptData | null>(null);
   const [blogPost, setBlogPost] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Load saved values from localStorage on mount
+  useEffect(() => {
+    const savedKey = localStorage.getItem('inkspell_api_key');
+    if (savedKey) setApiKey(savedKey);
+
+    const savedVoice = localStorage.getItem('inkspell_voice');
+    if (savedVoice) {
+      try {
+        const v = JSON.parse(savedVoice);
+        if (v.tone) setTone(v.tone);
+        if (v.sentenceStyle) setSentenceStyle(v.sentenceStyle);
+        if (v.loves) setLoves(v.loves);
+        if (v.avoids) setAvoids(v.avoids);
+        if (v.writingSample) setWritingSample(v.writingSample);
+      } catch { /* ignore corrupt data */ }
+    }
+
+    const savedArticles = localStorage.getItem('inkspell_reference_articles');
+    if (savedArticles) setReferenceArticles(savedArticles);
+  }, []);
+
+  function saveApiKey() {
+    localStorage.setItem('inkspell_api_key', apiKey);
+    setKeySaved(true);
+    setTimeout(() => setKeySaved(false), 2000);
+  }
+
+  function saveVoice() {
+    localStorage.setItem('inkspell_voice', JSON.stringify({ tone, sentenceStyle, loves, avoids, writingSample }));
+    setVoiceSaved(true);
+    setTimeout(() => setVoiceSaved(false), 2000);
+  }
+
+  function saveReferenceArticles() {
+    localStorage.setItem('inkspell_reference_articles', referenceArticles);
+    setArticlesSaved(true);
+    setTimeout(() => setArticlesSaved(false), 2000);
+  }
 
   const keyValid = apiKey.trim().startsWith('sk-ant-');
 
@@ -112,6 +155,7 @@ export default function Home() {
           loves,
           avoids,
           writingSample: writingSample.trim(),
+          referenceArticles: referenceArticles.trim(),
         }),
       });
       if (!res.ok) {
@@ -211,9 +255,18 @@ export default function Home() {
               className="px-3 py-2.5 rounded-xl border border-white/20 hover:border-white/40 text-white/50 hover:text-white/80 transition text-xs">
               {showKey ? 'Hide' : 'Show'}
             </button>
+            <button onClick={saveApiKey} disabled={!keyValid}
+              className="px-3 py-2.5 rounded-xl border transition text-xs font-semibold disabled:opacity-30"
+              style={{
+                borderColor: keySaved ? '#C9A84C' : 'rgba(201,168,76,0.4)',
+                color: keySaved ? '#C9A84C' : 'rgba(201,168,76,0.7)',
+                background: keySaved ? 'rgba(201,168,76,0.1)' : 'transparent',
+              }}>
+              {keySaved ? 'Saved ✦' : 'Save'}
+            </button>
           </div>
           <p className="mt-2 text-xs text-white/30 leading-relaxed">
-            Sent over HTTPS directly to Anthropic. Never stored.{' '}
+            Saved locally in your browser only.{' '}
             <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
               className="text-gold/60 hover:text-gold underline underline-offset-2">Get a key →</a>
           </p>
@@ -240,12 +293,23 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Step 3: Voice Settings (always visible) ── */}
+        {/* ── Step 3: Voice Settings ── */}
         <div className="mb-6 bg-white/5 border border-gold/10 rounded-2xl p-5 space-y-5">
-          <div className="flex items-center gap-2">
-            <span className="text-gold">✦</span>
-            <span className="text-sm font-semibold text-parchment">Your Writing Voice</span>
-            <span className="text-xs text-mist/60 ml-1">— the more you share, the more it sounds like you</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-gold">✦</span>
+              <span className="text-sm font-semibold text-parchment">Your Writing Voice</span>
+              <span className="text-xs text-mist/60 ml-1">— the more you share, the more it sounds like you</span>
+            </div>
+            <button onClick={saveVoice}
+              className="text-xs px-3 py-1.5 rounded-lg border transition font-semibold"
+              style={{
+                borderColor: voiceSaved ? '#C9A84C' : 'rgba(201,168,76,0.3)',
+                color: voiceSaved ? '#C9A84C' : 'rgba(201,168,76,0.6)',
+                background: voiceSaved ? 'rgba(201,168,76,0.1)' : 'transparent',
+              }}>
+              {voiceSaved ? 'Saved ✦' : 'Save Voice'}
+            </button>
           </div>
 
           {/* Tone picker */}
@@ -364,6 +428,38 @@ export default function Home() {
             />
             <p className="mt-1.5 text-xs text-white/25">Comma-separated. Woven in naturally — no keyword stuffing.</p>
           </div>
+        </div>
+
+        {/* ── Reference Articles ── */}
+        <div className="mb-6 bg-white/5 border border-white/10 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-mist/60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="text-sm font-semibold text-parchment">Reference Articles</span>
+              <span className="text-xs text-mist/50 ml-1">— saved locally, reused every time</span>
+            </div>
+            <button onClick={saveReferenceArticles}
+              className="text-xs px-3 py-1.5 rounded-lg border transition font-semibold"
+              style={{
+                borderColor: articlesSaved ? '#C9A84C' : 'rgba(255,255,255,0.2)',
+                color: articlesSaved ? '#C9A84C' : 'rgba(255,255,255,0.4)',
+                background: articlesSaved ? 'rgba(201,168,76,0.1)' : 'transparent',
+              }}>
+              {articlesSaved ? 'Saved ✦' : 'Save Articles'}
+            </button>
+          </div>
+          <textarea
+            value={referenceArticles}
+            onChange={(e) => setReferenceArticles(e.target.value)}
+            rows={5}
+            placeholder="Paste articles you want Aira to reference for structure, depth, or SEO style. These are saved locally and reused on every generation."
+            className="w-full rounded-xl px-4 py-3 text-sm text-parchment placeholder-white/25 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30 transition resize-none leading-relaxed"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+            disabled={isLoading}
+          />
+          <p className="mt-2 text-xs text-white/25">Aira uses these as context — not copied verbatim.</p>
         </div>
 
         {/* Error */}
