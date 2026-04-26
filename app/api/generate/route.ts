@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'A valid Anthropic API key is required.' }, { status: 401 });
   }
 
-  const { url, title, author, transcript } = await req.json();
+  const { url, title, author, transcript, keywords } = await req.json();
 
   const client = new Anthropic({ apiKey });
 
@@ -38,7 +38,8 @@ After the frontmatter:
 - Use bullet points for lists of steps or tips
 - Bold key terms or takeaways
 - End with a concrete next step or CTA
-- Naturally include the primary keyword 2–3 times in the body`;
+- Naturally include the primary keyword 2–3 times in the body
+${keywords ? `- Target keywords to weave in naturally: ${keywords}. Use these in the title, description, headings, and body where relevant — never forced or keyword-stuffed.` : ''}`;
 
   const userMessage = `Video title: ${title}
 Channel: ${author}
@@ -47,7 +48,7 @@ URL: ${url}
 Transcript:
 ${transcript.slice(0, 14000)}
 
-Write the SEO blog post.`;
+Write the SEO blog post.${keywords ? `\n\nTarget keywords: ${keywords}` : ''}`;
 
   try {
     const stream = await client.messages.stream({

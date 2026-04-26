@@ -15,6 +15,7 @@ export default function Home() {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [url, setUrl] = useState('');
+  const [keywords, setKeywords] = useState('');
   const [step, setStep] = useState<Step>('idle');
   const [error, setError] = useState('');
   const [data, setData] = useState<TranscriptData | null>(null);
@@ -57,7 +58,7 @@ export default function Home() {
           'Content-Type': 'application/json',
           'x-api-key': apiKey.trim(),
         },
-        body: JSON.stringify({ url: url.trim(), title: data.title, author: data.author, transcript: data.transcript }),
+        body: JSON.stringify({ url: url.trim(), title: data.title, author: data.author, transcript: data.transcript, keywords: keywords.trim() }),
       });
       if (!res.ok) {
         const json = await res.json();
@@ -185,6 +186,22 @@ export default function Home() {
           >
             {step === 'transcribing' ? 'Fetching…' : 'Get Transcript'}
           </button>
+        </div>
+
+        {/* Keywords */}
+        <div className="mb-8">
+          <label className="block text-sm font-medium text-white/60 mb-2">
+            Keywords to optimise for <span className="text-white/30 font-normal">(optional)</span>
+          </label>
+          <input
+            type="text"
+            value={keywords}
+            onChange={(e) => setKeywords(e.target.value)}
+            placeholder="e.g. Claude Code, AI productivity, prompt engineering"
+            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-offwhite placeholder-white/30 focus:outline-none focus:border-lime/60 focus:ring-1 focus:ring-lime/40 transition text-sm"
+            disabled={isLoading}
+          />
+          <p className="mt-1.5 text-xs text-white/30">Separate multiple keywords with commas. These will be woven naturally into the post.</p>
         </div>
 
         {/* Error */}
