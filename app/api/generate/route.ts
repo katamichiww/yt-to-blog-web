@@ -47,7 +47,7 @@ Write the SEO blog post.`;
   const stream = await client.messages.stream({
     model: 'claude-opus-4-7',
     max_tokens: 2048,
-    thinking: { type: 'adaptive' },
+    thinking: { type: 'enabled', budget_tokens: 1024 },
     system: systemPrompt,
     messages: [{ role: 'user', content: userMessage }],
   });
