@@ -12,12 +12,16 @@ interface TranscriptData {
 }
 
 export default function Home() {
+  const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
   const [url, setUrl] = useState('');
   const [step, setStep] = useState<Step>('idle');
   const [error, setError] = useState('');
   const [data, setData] = useState<TranscriptData | null>(null);
   const [blogPost, setBlogPost] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const keyValid = apiKey.trim().startsWith('sk-ant-');
 
   async function handleTranscribe() {
     if (!url.trim()) return;
@@ -42,14 +46,17 @@ export default function Home() {
   }
 
   async function handleGenerate() {
-    if (!data) return;
+    if (!data || !keyValid) return;
     setError('');
     setStep('generating');
     setBlogPost('');
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey.trim(),
+        },
         body: JSON.stringify({ url: url.trim(), title: data.title, author: data.author, transcript: data.transcript }),
       });
       if (!res.ok) {
@@ -120,6 +127,46 @@ export default function Home() {
           </p>
         </div>
 
+        {/* API Key input */}
+        <div className="mb-8 bg-white/5 border border-white/10 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-lime flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            <span className="text-sm font-semibold text-offwhite">Your Anthropic API Key</span>
+            {keyValid && (
+              <span className="ml-auto text-xs bg-lime/20 text-lime border border-lime/30 rounded-full px-2 py-0.5">Ready</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="sk-ant-api03-..."
+              className="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm text-offwhite placeholder-white/30 focus:outline-none focus:border-lime/60 focus:ring-1 focus:ring-lime/40 transition font-mono"
+            />
+            <button
+              onClick={() => setShowKey((v) => !v)}
+              className="px-3 py-2.5 rounded-lg border border-white/20 hover:border-white/40 text-white/50 hover:text-white/80 transition text-xs"
+              title={showKey ? 'Hide key' : 'Show key'}
+            >
+              {showKey ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          <p className="mt-2.5 text-xs text-white/35 leading-relaxed">
+            Your key is sent over HTTPS directly to the Anthropic API and is never stored or logged by this app.{' '}
+            <a
+              href="https://console.anthropic.com/settings/keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-lime/60 hover:text-lime underline underline-offset-2"
+            >
+              Get a key →
+            </a>
+          </p>
+        </div>
+
         {/* URL Input */}
         <div className="flex gap-3 mb-8">
           <input
@@ -180,9 +227,12 @@ export default function Home() {
         {/* Generate button */}
         {(step === 'transcribed' || step === 'generating' || step === 'done') && (
           <div className="mb-8">
+            {!keyValid && step !== 'generating' && (
+              <p className="text-center text-coral/80 text-sm mb-3">Add your Anthropic API key above to generate</p>
+            )}
             <button
               onClick={handleGenerate}
-              disabled={step === 'generating'}
+              disabled={step === 'generating' || !keyValid}
               className="w-full bg-lime text-forest font-bold py-4 rounded-xl text-lg hover:bg-lime/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {step === 'generating' ? 'Writing blog post…' : step === 'done' ? '↺ Regenerate' : '✦ Generate SEO Blog Post'}

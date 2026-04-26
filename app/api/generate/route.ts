@@ -1,10 +1,15 @@
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic();
-
 export async function POST(req: NextRequest) {
+  const apiKey = req.headers.get('x-api-key');
+  if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+    return Response.json({ error: 'A valid Anthropic API key is required.' }, { status: 401 });
+  }
+
   const { url, title, author, transcript } = await req.json();
+
+  const client = new Anthropic({ apiKey });
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -44,35 +49,44 @@ ${transcript.slice(0, 14000)}
 
 Write the SEO blog post.`;
 
-  const stream = await client.messages.stream({
-    model: 'claude-opus-4-7',
-    max_tokens: 2048,
-    thinking: { type: 'enabled', budget_tokens: 1024 },
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userMessage }],
-  });
+  try {
+    const stream = await client.messages.stream({
+      model: 'claude-opus-4-7',
+      max_tokens: 2048,
+      thinking: { type: 'enabled', budget_tokens: 1024 },
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
+    });
 
-  const encoder = new TextEncoder();
+    const encoder = new TextEncoder();
 
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of stream) {
-          if (
-            chunk.type === 'content_block_delta' &&
-            chunk.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(encoder.encode(chunk.delta.text));
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            if (
+              chunk.type === 'content_block_delta' &&
+              chunk.delta.type === 'text_delta'
+            ) {
+              controller.enqueue(encoder.encode(chunk.delta.text));
+            }
           }
+          controller.close();
+        } catch (e) {
+          controller.error(e);
         }
-        controller.close();
-      } catch (e) {
-        controller.error(e);
-      }
-    },
-  });
+      },
+    });
 
-  return new Response(readableStream, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  });
+    return new Response(readableStream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Generation failed';
+    const isAuthError = msg.includes('401') || msg.includes('authentication') || msg.includes('API key');
+    return Response.json(
+      { error: isAuthError ? 'Invalid API key. Check your key at console.anthropic.com.' : msg },
+      { status: isAuthError ? 401 : 500 }
+    );
+  }
 }
