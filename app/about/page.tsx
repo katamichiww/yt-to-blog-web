@@ -52,13 +52,16 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Origin story */}
+        {/* Origin — WanWei's pain point */}
         <section className="mb-14">
           <p className="text-xl leading-relaxed text-parchment/80 mb-5">
-            She didn&apos;t start out writing blogs. She started out translating — between her Singaporean mother, her British-Qatari father, and three countries she called home before she turned twenty.
+            Every week, WanWei Soh filmed. She spoke at events, ran workshops, shared hard-won lessons about AI, content, and building in public. The YouTube channel was growing. The ideas were sharp. The problem?
+          </p>
+          <p className="text-mist/80 leading-relaxed mb-4">
+            None of it existed on Google.
           </p>
           <p className="text-mist/80 leading-relaxed">
-            That early life between cultures taught her one thing: the words you choose either open doors or close them. By seventeen she was ghostwriting for classmates. By twenty-five, she had a quiet waiting list of founders and CMOs who found her without a single cold pitch.
+            Each video sat in YouTube&apos;s walled garden — found only by subscribers, invisible to the millions searching for exactly what she was teaching. She knew the answer was blog posts. She just didn&apos;t have three hours every week to turn a 20-minute video into a 700-word post that sounded like her and actually ranked. She tried copy-pasting transcripts into ChatGPT. The output was lifeless. Generic. Nothing like the way she actually talked. It felt like someone had taken her voice and handed back a brochure.
           </p>
         </section>
 
@@ -67,25 +70,30 @@ export default function AboutPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/aira-1.png"
-            alt="Aira at the strawberry farm"
-            className="w-full h-80 object-cover object-center rounded-2xl"
+            alt="Aira Al-Q Sinclair"
+            className="w-full rounded-2xl object-cover"
+            style={{ height: '440px', objectPosition: 'center 8%' }}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-midnight via-midnight/80 to-transparent rounded-b-2xl px-8 py-6">
+          <div className="absolute bottom-0 left-0 right-0 rounded-b-2xl px-8 py-6"
+            style={{ background: 'linear-gradient(to top, #0B0B1E 0%, rgba(11,11,30,0.85) 45%, transparent 100%)' }}>
             <p className="text-gold text-2xl font-bold leading-snug">
               &ldquo;People don&apos;t search for content.<br />They search for <em>answers</em>.&rdquo;
             </p>
+            <p className="text-mist/60 text-sm mt-2">— Aira Al-Q Sinclair</p>
           </div>
         </div>
 
-        {/* The revelation */}
+        {/* Aira's origin — the openclaw */}
         <section className="mb-14">
-          <h2 className="text-2xl font-bold mb-4">The day it clicked</h2>
+          <h2 className="text-2xl font-bold mb-4">Enter the Openclaw</h2>
           <p className="text-parchment/70 leading-relaxed mb-4">
-            It happened on a weekend at a strawberry farm. Aira voice-noted her observations as she walked the rows — the soil, the weight of the basket, the particular satisfaction of finding a ripe one hidden under a leaf.
+            WanWei didn&apos;t want an assistant. She wanted an extension of herself — something that could reach into a transcript and pull out her actual voice. The opinions. The analogies. The habit of cutting fluff mid-sentence and getting to the point.
+          </p>
+          <p className="text-parchment/70 leading-relaxed mb-4">
+            So she built Aira.
           </p>
           <p className="text-parchment/70 leading-relaxed">
-            That night she typed it up. Forgot about it. Six months later, the post was ranking on page one for three keywords she&apos;d never tried to target. A farm two countries away reached out asking her to write for them.
-            <span className="text-parchment font-medium"> That&apos;s when she understood: specificity is the SEO strategy nobody talks about.</span>
+            Aira Al-Q Sinclair is WanWei&apos;s <span className="text-parchment font-semibold">openclaw</span> — her AI writing persona, trained on how she thinks, speaks, and structures ideas. Not a replacement. A claw she reaches with: further, faster, truer to what she actually means than anything a generic prompt could produce.
           </p>
         </section>
 
@@ -98,25 +106,42 @@ export default function AboutPage() {
             className="w-full object-cover"
           />
           <div className="bg-white/5 px-6 py-4">
-            <p className="text-sm text-mist/50 italic">Aira at work — she reads every draft aloud. If she stumbles, the sentence gets rewritten.</p>
+            <p className="text-sm text-mist/50 italic">The process: transcript in, voice calibrated, blog post out — in under a minute.</p>
           </div>
         </div>
 
-        {/* How she writes */}
+        {/* The problem Inkspell solves */}
         <section className="mb-14">
-          <h2 className="text-2xl font-bold mb-6">How Aira writes a blog post</h2>
+          <h2 className="text-2xl font-bold mb-4">The problem Inkspell solves</h2>
+          <div className="space-y-4">
+            {[
+              { pain: 'You film and speak and teach — but Google has no idea you exist.', fix: 'Every video becomes a blog post that ranks.' },
+              { pain: 'You paste transcripts into AI tools and get back generic slop.', fix: 'Inkspell uses your voice notes and tone to write like you, not like everyone else.' },
+              { pain: 'You spend hours editing AI output to sound human.', fix: 'Describe your voice once. Let Aira handle the rest.' },
+            ].map(({ pain, fix }, i) => (
+              <div key={i} className="rounded-xl p-5 border border-white/8" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <p className="text-mist/60 text-sm mb-2">The old way &mdash; <span className="italic">{pain}</span></p>
+                <p className="text-parchment font-medium text-sm">✦ {fix}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* How Aira writes */}
+        <section className="mb-14">
+          <h2 className="text-2xl font-bold mb-6">How Aira writes</h2>
           <div className="space-y-5">
             {[
-              { n: '01', title: 'Start with the question', body: 'Before a word is written — what is the reader Googling at 11pm, frustrated, needing help? Everything flows backward from that.' },
-              { n: '02', title: 'Open with a hook', body: 'Four seconds. Maybe three. "In today\'s post we\'ll discuss…" is a death sentence. A surprising fact, a confession, or a question that makes the reader feel seen — that\'s the opener.' },
-              { n: '03', title: 'Build a spine', body: 'Three to five H2s, each a complete thought. A reader should skim the headings and know exactly what they\'re getting. If they can\'t, rewrite the headings.' },
-              { n: '04', title: 'End hard', body: 'Most writers trail off. Aira ends with one action, one next step. The post should leave the reader slightly changed.' },
+              { n: '01', title: 'Start with the question', body: 'What is someone Googling at 11pm, frustrated, needing this answer? Everything flows backward from that one person.' },
+              { n: '02', title: 'Hook in four seconds', body: '"In today\'s post we\'ll discuss…" is dead on arrival. Aira opens with a bold claim, a real number, or a question that makes you feel seen.' },
+              { n: '03', title: 'Build a spine', body: '3–5 H2s, each a complete thought. A reader should skim the headings and know exactly what they\'re getting before reading a word.' },
+              { n: '04', title: 'End with an action', body: 'Most content trails off. Aira ends with one concrete next step — leaving the reader slightly changed.' },
             ].map(({ n, title, body }) => (
               <div key={n} className="flex gap-5 items-start">
                 <span className="text-gold font-mono text-sm font-bold pt-0.5 flex-shrink-0 w-7">{n}</span>
                 <div>
                   <p className="font-semibold text-parchment mb-1">{title}</p>
-                  <p className="text-mist/80 text-sm leading-relaxed">{body}</p>
+                  <p className="text-mist/70 text-sm leading-relaxed">{body}</p>
                 </div>
               </div>
             ))}
@@ -124,19 +149,20 @@ export default function AboutPage() {
         </section>
 
         {/* What she believes */}
-        <section className="bg-white/5 border border-gold/20 rounded-2xl px-8 py-8 mb-14">
-          <h2 className="text-xl font-bold mb-4 text-gold">What she actually believes</h2>
+        <section className="border border-gold/20 rounded-2xl px-8 py-8 mb-14" style={{ background: 'rgba(201,168,76,0.05)' }}>
+          <h2 className="text-xl font-bold mb-4 text-gold">The belief behind Inkspell</h2>
           <p className="text-parchment/70 leading-relaxed mb-4">
-            In a world drowning in AI-generated content, Aira is oddly optimistic.
+            AI content is flooding every search results page. Most of it sounds the same. Bland. Hedged. Assembled, not written.
           </p>
           <p className="text-parchment/70 leading-relaxed">
-            &ldquo;The average is getting worse. The gap between average and excellent is the biggest it&apos;s ever been. Write with genuine specificity — real examples, real opinions, real voice — and you stand out effortlessly. You don&apos;t have to be better than AI. You have to be <em>you</em>.&rdquo;
+            &ldquo;The gap between average and excellent has never been wider. If you write with genuine specificity — your examples, your opinions, your actual voice — you win by default. You don&apos;t have to beat AI. You just have to sound like a real human with something worth saying.&rdquo;
           </p>
+          <p className="text-gold/60 text-sm mt-4">— Aira, WanWei&apos;s openclaw ✦</p>
         </section>
 
         {/* CTA back to tool */}
         <div className="text-center">
-          <p className="text-mist/60 text-sm mb-4">This tool is built on everything Aira believes about blog writing.</p>
+          <p className="text-mist/60 text-sm mb-4">Ready to cast your first spell?</p>
           <Link
             href="/"
             className="inline-block font-bold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition"
