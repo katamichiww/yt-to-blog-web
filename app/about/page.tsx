@@ -26,7 +26,7 @@ export default function AboutPage() {
         <div className="flex flex-col md:flex-row gap-8 items-center mb-16">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/aira-1.png"
+            src="/aira-2.jpeg"
             alt="Aira Al-Q Sinclair"
             className="w-56 h-72 object-cover object-top rounded-2xl flex-shrink-0 shadow-xl"
           />
@@ -55,9 +55,9 @@ export default function AboutPage() {
         <div className="relative mb-14">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/aira-2.jpeg"
+            src="/aira-1.png"
             alt="Aira at the strawberry farm"
-            className="w-full h-80 object-cover object-top rounded-2xl"
+            className="w-full h-80 object-cover object-center rounded-2xl"
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-forest via-forest/80 to-transparent rounded-b-2xl px-8 py-6">
             <p className="text-lime text-2xl font-bold leading-snug">
