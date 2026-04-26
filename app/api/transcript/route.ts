@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { YoutubeTranscript } from 'youtube-transcript';
+import { YoutubeTranscript as YtPlus } from 'youtube-transcript-plus';
 
 function extractVideoId(url: string): string {
   const patterns = [
@@ -49,9 +49,15 @@ function parseTranscriptXml(xml: string): string[] {
 const ANDROID_UA = 'com.google.android.youtube/20.10.38 (Linux; U; Android 14)';
 const INNERTUBE_URL = 'https://www.youtube.com/youtubei/v1/player?prettyPrint=false';
 
-// ─── Strategy 1: Innertube API (Android client) ───────────────────────────────
-// YouTube's internal API with Android context — doesn't require browser session.
-// The baseUrls it returns work from server IPs without cookies.
+// ─── Strategy 1: youtube-transcript-plus (Innertube with retry logic) ─────────
+async function viaYtPlus(videoId: string): Promise<string> {
+  const segs = await YtPlus.fetchTranscript(videoId);
+  if (!segs?.length || segs.length < 5) throw new Error(`Only ${segs?.length ?? 0} segments returned`);
+  return segs.map(s => decodeEntities(s.text)).join(' ');
+}
+
+// ─── Strategy 2: Direct Innertube API (Android client) ────────────────────────
+// Uses the same API as youtube-transcript-plus but without the package overhead.
 async function viaInnertube(videoId: string): Promise<string> {
   const resp = await fetch(INNERTUBE_URL, {
     method: 'POST',
@@ -85,20 +91,13 @@ async function viaInnertube(videoId: string): Promise<string> {
   return texts.join(' ');
 }
 
-// ─── Strategy 2: youtube-transcript package ───────────────────────────────────
-async function viaPackage(videoId: string): Promise<string> {
-  const segs = await YoutubeTranscript.fetchTranscript(videoId);
-  if (!segs?.length || segs.length < 5) throw new Error('Too few segments from package');
-  return segs.map(s => s.text).join(' ');
-}
-
 // ─── Main orchestrator ────────────────────────────────────────────────────────
 async function getTranscript(videoId: string): Promise<string> {
   const errors: string[] = [];
 
   for (const [name, fn] of [
-    ['Innertube', () => viaInnertube(videoId)],
-    ['package', () => viaPackage(videoId)],
+    ['youtube-transcript-plus', () => viaYtPlus(videoId)],
+    ['Innertube fallback', () => viaInnertube(videoId)],
   ] as const) {
     try {
       const text = await fn();
