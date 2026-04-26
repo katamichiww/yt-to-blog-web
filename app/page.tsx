@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 type Step = 'idle' | 'transcribing' | 'transcribed' | 'generating' | 'done';
 
@@ -114,6 +115,7 @@ export default function Home() {
           <span className="text-forest font-bold text-sm">YB</span>
         </div>
         <span className="font-semibold tracking-tight text-lg">YT to Blog</span>
+        <Link href="/about" className="ml-auto text-sm text-white/40 hover:text-lime transition">Meet Aira →</Link>
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-14">
