@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 Tone style: ${toneInstructions[tone] || toneInstructions.casual}
 
 Blog post requirements:
-- 600–900 words (not counting frontmatter)
+- 1,000–1,200 words (not counting frontmatter)
 - Open with a hook — a bold claim, surprising stat, or question that makes the reader lean in. NOT a restatement of the title.
 - 3–5 ## H2 sections, each a complete thought
 - Bullet points for lists of steps or tips
@@ -78,7 +78,7 @@ Write the blog post in the creator's voice.`;
   try {
     const stream = await client.messages.stream({
       model: 'claude-opus-4-7',
-      max_tokens: 2048,
+      max_tokens: 4096,
       thinking: { type: 'enabled', budget_tokens: 1024 },
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
