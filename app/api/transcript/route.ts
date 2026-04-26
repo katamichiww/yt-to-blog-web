@@ -1,5 +1,8 @@
+// Run on Vercel Edge (Cloudflare PoPs) instead of AWS Lambda.
+// YouTube restricts caption data for AWS datacenter IPs — Edge IPs are different.
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from 'next/server';
-import { YoutubeTranscript as YtPlus } from 'youtube-transcript-plus';
 
 function extractVideoId(url: string): string {
   const patterns = [
@@ -48,6 +51,7 @@ function parseTranscriptXml(xml: string): string[] {
 
 const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const ANDROID_UA = 'com.google.android.youtube/20.10.38 (Linux; U; Android 14)';
+const IOS_UA = 'com.google.ios.youtube/20.10.4 (iPhone14,3; U; CPU iOS 17_0 like Mac OS X)';
 
 function parseCookies(setCookieHeader: string | null): string {
   if (!setCookieHeader) return '';
@@ -58,130 +62,131 @@ function parseCookies(setCookieHeader: string | null): string {
     .join('; ');
 }
 
-// ─── Strategy 1: Full browser mimic (watch page → player API → XML) ──────────
-// Fetches the watch page first to get the Innertube API key, session cookies,
-// and visitorData — then uses all three when calling the player API and fetching
-// the transcript XML. Works from cloud IPs where cookieless requests are blocked.
-async function viaBrowserMimic(videoId: string): Promise<string> {
-  const watchHeaders = {
-    'User-Agent': BROWSER_UA,
-    'Accept-Language': 'en-US,en;q=0.9',
-    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  };
+async function fetchPlayerData(videoId: string, clientName: string, clientVersion: string, ua: string, apiKey: string, visitorData: string, cookieStr: string) {
+  const url = `https://www.youtube.com/youtubei/v1/player?key=${apiKey}&prettyPrint=false`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': ua,
+      ...(visitorData ? { 'X-Goog-Visitor-Id': visitorData } : {}),
+      ...(cookieStr ? { Cookie: cookieStr } : {}),
+    },
+    body: JSON.stringify({
+      context: { client: { clientName, clientVersion, hl: 'en', gl: 'US' } },
+      videoId,
+    }),
+  });
+  if (!res.ok) throw new Error(`player ${res.status}`);
+  return res.json();
+}
 
-  const watchRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, { headers: watchHeaders });
-  if (!watchRes.ok) throw new Error(`watch page ${watchRes.status}`);
-
+// ─── Strategy 1: Browser mimic with ANDROID client ────────────────────────────
+async function viaAndroid(videoId: string): Promise<string> {
+  const watchRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    headers: {
+      'User-Agent': BROWSER_UA,
+      'Accept-Language': 'en-US,en;q=0.9',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      Cookie: 'SOCS=CAISAiAB; CONSENT=YES+cb',
+    },
+  });
+  if (!watchRes.ok) throw new Error(`watch ${watchRes.status}`);
   const cookieStr = parseCookies(watchRes.headers.get('set-cookie'));
   const html = await watchRes.text();
 
   const apiKey = (html.match(/"INNERTUBE_API_KEY":"([^"]+)"/) ?? [])[1] ?? '';
   const visitorData = (html.match(/"visitorData":"([^"]+)"/) ?? [])[1] ?? '';
 
-  const playerUrl = `https://www.youtube.com/youtubei/v1/player?key=${apiKey}&prettyPrint=false`;
-  const playerRes = await fetch(playerUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'User-Agent': ANDROID_UA,
-      'X-Goog-Visitor-Id': visitorData,
-      ...(cookieStr ? { Cookie: cookieStr } : {}),
-    },
-    body: JSON.stringify({
-      context: { client: { clientName: 'ANDROID', clientVersion: '20.10.38' } },
-      videoId,
-    }),
-  });
-  if (!playerRes.ok) throw new Error(`player API ${playerRes.status}`);
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await playerRes.json() as any;
+  const data = await fetchPlayerData(videoId, 'ANDROID', '20.10.38', ANDROID_UA, apiKey, visitorData, cookieStr) as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tracks: any[] = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-  if (!Array.isArray(tracks) || !tracks.length) throw new Error('No caption tracks in player response');
+  if (!Array.isArray(tracks) || !tracks.length) throw new Error('No caption tracks (ANDROID)');
 
-  const track =
-    tracks.find((t) => t.languageCode === 'en' && t.kind !== 'asr') ||
-    tracks.find((t) => t.languageCode === 'en') ||
-    tracks.find((t) => t.kind !== 'asr') ||
-    tracks[0];
-
+  const track = tracks.find(t => t.languageCode === 'en' && t.kind !== 'asr') || tracks.find(t => t.languageCode === 'en') || tracks[0];
   const xmlRes = await fetch(track.baseUrl as string, {
-    headers: {
-      'User-Agent': BROWSER_UA,
-      ...(cookieStr ? { Cookie: cookieStr } : {}),
-    },
+    headers: { 'User-Agent': BROWSER_UA, ...(cookieStr ? { Cookie: cookieStr } : {}) },
   });
-  if (!xmlRes.ok) throw new Error(`caption XML ${xmlRes.status}`);
   const xml = await xmlRes.text();
-  if (!xml || xml.length < 100) throw new Error('Caption XML empty');
-
+  if (!xml || xml.length < 100) throw new Error('XML empty (ANDROID)');
   const texts = parseTranscriptXml(xml);
-  if (texts.length < 5) throw new Error(`Only ${texts.length} segments`);
+  if (texts.length < 5) throw new Error(`Only ${texts.length} segments (ANDROID)`);
   return texts.join(' ');
 }
 
-// ─── Strategy 2: youtube-transcript-plus (Innertube with retry) ───────────────
-async function viaYtPlus(videoId: string): Promise<string> {
-  const segs = await YtPlus.fetchTranscript(videoId);
-  if (!segs?.length || segs.length < 5) throw new Error(`Only ${segs?.length ?? 0} segments`);
-  return segs.map(s => decodeEntities(s.text)).join(' ');
+// ─── Strategy 2: Same flow with IOS client ────────────────────────────────────
+async function viaIos(videoId: string): Promise<string> {
+  const watchRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    headers: {
+      'User-Agent': BROWSER_UA,
+      'Accept-Language': 'en-US,en;q=0.9',
+      Cookie: 'SOCS=CAISAiAB; CONSENT=YES+cb',
+    },
+  });
+  if (!watchRes.ok) throw new Error(`watch ${watchRes.status}`);
+  const cookieStr = parseCookies(watchRes.headers.get('set-cookie'));
+  const html = await watchRes.text();
+  const apiKey = (html.match(/"INNERTUBE_API_KEY":"([^"]+)"/) ?? [])[1] ?? '';
+  const visitorData = (html.match(/"visitorData":"([^"]+)"/) ?? [])[1] ?? '';
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = await fetchPlayerData(videoId, 'IOS', '20.10.4', IOS_UA, apiKey, visitorData, cookieStr) as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tracks: any[] = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+  if (!Array.isArray(tracks) || !tracks.length) throw new Error('No caption tracks (IOS)');
+
+  const track = tracks.find(t => t.languageCode === 'en' && t.kind !== 'asr') || tracks.find(t => t.languageCode === 'en') || tracks[0];
+  const xmlRes = await fetch(track.baseUrl as string, {
+    headers: { 'User-Agent': IOS_UA, ...(cookieStr ? { Cookie: cookieStr } : {}) },
+  });
+  const xml = await xmlRes.text();
+  if (!xml || xml.length < 100) throw new Error('XML empty (IOS)');
+  const texts = parseTranscriptXml(xml);
+  if (texts.length < 5) throw new Error(`Only ${texts.length} segments (IOS)`);
+  return texts.join(' ');
 }
 
 // ─── Strategy 3: Direct Innertube (no watch page) ─────────────────────────────
-async function viaInnertube(videoId: string): Promise<string> {
+async function viaDirect(videoId: string): Promise<string> {
   const res = await fetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'User-Agent': ANDROID_UA },
     body: JSON.stringify({
-      context: { client: { clientName: 'ANDROID', clientVersion: '20.10.38' } },
+      context: { client: { clientName: 'ANDROID', clientVersion: '20.10.38', hl: 'en', gl: 'US' } },
       videoId,
     }),
   });
-  if (!res.ok) throw new Error(`player ${res.status}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = await res.json() as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tracks: any[] = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-  if (!Array.isArray(tracks) || !tracks.length) throw new Error('No caption tracks');
-
-  const track =
-    tracks.find((t) => t.languageCode === 'en' && t.kind !== 'asr') ||
-    tracks.find((t) => t.languageCode === 'en') ||
-    tracks.find((t) => t.kind !== 'asr') ||
-    tracks[0];
-
+  if (!Array.isArray(tracks) || !tracks.length) throw new Error('No caption tracks (direct)');
+  const track = tracks.find(t => t.languageCode === 'en' && t.kind !== 'asr') || tracks.find(t => t.languageCode === 'en') || tracks[0];
   const xmlRes = await fetch(track.baseUrl as string, { headers: { 'User-Agent': ANDROID_UA } });
-  if (!xmlRes.ok) throw new Error(`XML ${xmlRes.status}`);
   const xml = await xmlRes.text();
-  if (!xml || xml.length < 100) throw new Error('XML empty');
-
+  if (!xml || xml.length < 100) throw new Error('XML empty (direct)');
   const texts = parseTranscriptXml(xml);
-  if (texts.length < 5) throw new Error(`Only ${texts.length} segments`);
+  if (texts.length < 5) throw new Error(`Only ${texts.length} segments (direct)`);
   return texts.join(' ');
 }
 
-// ─── Main orchestrator ────────────────────────────────────────────────────────
 async function getTranscript(videoId: string): Promise<string> {
   const errors: string[] = [];
-
   for (const [name, fn] of [
-    ['browser-mimic', () => viaBrowserMimic(videoId)],
-    ['youtube-transcript-plus', () => viaYtPlus(videoId)],
-    ['innertube-direct', () => viaInnertube(videoId)],
+    ['android', () => viaAndroid(videoId)],
+    ['ios', () => viaIos(videoId)],
+    ['direct', () => viaDirect(videoId)],
   ] as const) {
     try {
       const text = await fn();
       if (text && text.length > 50) return text;
-      errors.push(`${name}: result too short`);
+      errors.push(`${name}: too short`);
     } catch (e) {
       errors.push(`${name}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-
-  throw new Error(
-    `Could not fetch transcript. The video may not have captions enabled.\n\nDetails: ${errors.join(' | ')}`
-  );
+  throw new Error(`Could not fetch transcript. The video may not have captions enabled.\n\nDetails: ${errors.join(' | ')}`);
 }
 
 export async function POST(req: NextRequest) {
