@@ -37,7 +37,7 @@ export default function AboutPage() {
         <div className="flex flex-col md:flex-row gap-8 items-center mb-16">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/aira-2.jpeg"
+            src="/aira-luxury.jpeg"
             alt="Aira Al-Q Sinclair"
             className="w-56 h-72 object-cover object-top rounded-2xl flex-shrink-0 shadow-xl"
           />
@@ -69,13 +69,13 @@ export default function AboutPage() {
         <div className="relative mb-14">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/aira-1.png"
-            alt="Aira Al-Q Sinclair"
+            src="/aira-wanwei-inkspell.png"
+            alt="WanWei and Aira at the Cast Your First InkSpell banner"
             className="w-full rounded-2xl object-cover"
-            style={{ height: '440px', objectPosition: 'center 8%' }}
+            style={{ height: '420px', objectPosition: 'center 30%' }}
           />
           <div className="absolute bottom-0 left-0 right-0 rounded-b-2xl px-8 py-6"
-            style={{ background: 'linear-gradient(to top, #0B0B1E 0%, rgba(11,11,30,0.85) 45%, transparent 100%)' }}>
+            style={{ background: 'linear-gradient(to top, #0B0B1E 0%, rgba(11,11,30,0.75) 50%, transparent 100%)' }}>
             <p className="text-gold text-2xl font-bold leading-snug">
               &ldquo;People don&apos;t search for content.<br />They search for <em>answers</em>.&rdquo;
             </p>
@@ -168,7 +168,7 @@ export default function AboutPage() {
             className="inline-block font-bold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition"
             style={{ background: 'linear-gradient(135deg, #C9A84C, #E8D080)', color: '#0B0B1E' }}
           >
-            Try YT to Blog →
+            Cast Your First InkSpell ✦
           </Link>
         </div>
 
