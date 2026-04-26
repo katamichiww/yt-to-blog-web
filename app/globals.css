@@ -16,3 +16,19 @@ body {
   .text-gold { color: #C9A84C; }
   .bg-magic { background: radial-gradient(ellipse at 30% 20%, #2D1B69 0%, #0B0B1E 60%); }
 }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  33% { transform: translateY(-6px) translateX(3px); }
+  66% { transform: translateY(3px) translateX(-4px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; filter: blur(1px); }
+  50% { opacity: 0.9; filter: blur(0px); }
+}

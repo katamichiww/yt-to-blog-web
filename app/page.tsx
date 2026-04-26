@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import StarField from './components/StarField';
 
 type Step = 'idle' | 'transcribing' | 'transcribed' | 'generating' | 'done';
 
@@ -155,10 +156,11 @@ export default function Home() {
   const isLoading = step === 'transcribing' || step === 'generating';
 
   return (
-    <main className="min-h-screen text-parchment" style={{ background: 'radial-gradient(ellipse at 30% 10%, #2D1B69 0%, #0B0B1E 55%)' }}>
+    <main className="relative min-h-screen text-parchment" style={{ background: 'radial-gradient(ellipse at 30% 10%, #2D1B69 0%, #0B0B1E 55%)' }}>
+      <StarField />
 
       {/* Header */}
-      <header className="border-b border-white/10 px-6 py-4 flex items-center gap-3">
+      <header className="relative z-10 border-b border-white/10 px-6 py-4 flex items-center gap-3">
         <div className="flex items-center gap-2.5">
           <InkspellLogo />
           <span className="font-bold tracking-tight text-lg text-parchment">Inkspell</span>
@@ -170,7 +172,7 @@ export default function Home() {
         </Link>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-14">
+      <div className="relative z-10 max-w-3xl mx-auto px-6 py-14">
 
         {/* Hero */}
         <div className="mb-12 text-center">

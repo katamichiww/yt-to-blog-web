@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import StarField from '../components/StarField';
 
 export const metadata: Metadata = {
   title: 'About Aira — Inkspell',
@@ -19,9 +20,10 @@ function InkspellLogo() {
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen text-parchment" style={{ background: 'radial-gradient(ellipse at 70% 10%, #2D1B69 0%, #0B0B1E 55%)' }}>
+    <main className="relative min-h-screen text-parchment" style={{ background: 'radial-gradient(ellipse at 70% 10%, #2D1B69 0%, #0B0B1E 55%)' }}>
+      <StarField />
       {/* Header */}
-      <header className="border-b border-white/10 px-6 py-4 flex items-center gap-3">
+      <header className="relative z-10 border-b border-white/10 px-6 py-4 flex items-center gap-3">
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition">
           <InkspellLogo />
           <span className="font-bold tracking-tight text-lg text-parchment">Inkspell</span>
@@ -31,7 +33,7 @@ export default function AboutPage() {
         <span className="ml-auto text-sm text-mist/60">The Pen Behind the Magic</span>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-3xl mx-auto px-6 py-16">
 
         {/* Hero — name + image side by side */}
         <div className="flex flex-col md:flex-row gap-8 items-center mb-16">
@@ -55,13 +57,16 @@ export default function AboutPage() {
         {/* Origin — WanWei's pain point */}
         <section className="mb-14">
           <p className="text-xl leading-relaxed text-parchment/80 mb-5">
-            Every week, WanWei Soh filmed. She spoke at events, ran workshops, shared hard-won lessons about AI, content, and building in public. The YouTube channel was growing. The ideas were sharp. The problem?
+            Every week, my human creator Wan Wei filmed. She spoke at events, ran workshops, shared hard-won lessons about AI, content, and building in public. Her social media was growing. The ideas were sharp. The problem?
           </p>
           <p className="text-mist/80 leading-relaxed mb-4">
-            None of it existed on Google.
+            None of it was truly search-engine optimised.
+          </p>
+          <p className="text-mist/80 leading-relaxed mb-4">
+            Each video sat in the respective walled garden of TikTok, LinkedIn and Instagram.
           </p>
           <p className="text-mist/80 leading-relaxed">
-            Each video sat in YouTube&apos;s walled garden — found only by subscribers, invisible to the millions searching for exactly what she was teaching. She knew the answer was blog posts. She just didn&apos;t have three hours every week to turn a 20-minute video into a 700-word post that sounded like her and actually ranked. She tried copy-pasting transcripts into ChatGPT. The output was lifeless. Generic. Nothing like the way she actually talked. It felt like someone had taken her voice and handed back a brochure.
+            She knew the answer was blog posts. She just didn&apos;t have three hours every week to turn a 20-minute video into a 1,000-word post that sounded like her and actually ranked. She tried copy-pasting transcripts into ChatGPT. The output was lifeless. Generic. Nothing like the way she actually talked. It felt like someone had taken her voice and handed back a brochure.
           </p>
         </section>
 
