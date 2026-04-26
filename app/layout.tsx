@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'YT to Blog — Turn Any YouTube Video into an SEO Blog Post',
-  description: 'Paste a YouTube URL, get the transcript, then generate a polished SEO-optimised blog post in one click.',
+  title: 'Inkspell — Turn Any YouTube Video into a Blog Post That Sounds Like You',
+  description: "Paste a YouTube URL, describe your voice, and let Aira's magic pen transform the transcript into an SEO blog post in your own words.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

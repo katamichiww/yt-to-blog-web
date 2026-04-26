@@ -7,39 +7,49 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'A valid Anthropic API key is required.' }, { status: 401 });
   }
 
-  const { url, title, author, transcript, keywords } = await req.json();
+  const { url, title, author, transcript, keywords, tone, voiceNotes } = await req.json();
 
   const client = new Anthropic({ apiKey });
 
   const today = new Date().toISOString().split('T')[0];
 
-  const systemPrompt = `You are an expert SEO blog writer. Transform a YouTube video transcript into a polished, search-optimised blog post.
+  const toneInstructions: Record<string, string> = {
+    casual: 'Write like talking to a smart friend — relaxed, warm, everyday language. Short sentences. No fluff.',
+    professional: 'Credible and polished, but never stiff. Authoritative without being distant.',
+    bold: 'Direct, opinionated, confident. State your position clearly. No hedging or wishy-washy qualifiers.',
+    storytelling: 'Narrative and immersive. Use scenes, tension, and vivid specifics. Pull the reader into a moment.',
+  };
 
-Tone:
-- Conversational but credible
-- Actionable — readers should leave knowing what to do next
-- Clear and jargon-free
+  const voiceSection = voiceNotes?.trim()
+    ? `\n\nThe writer's personal voice notes:\n${voiceNotes}\n\nHonour every instruction in the voice notes above — these override generic style guidance. If they mention specific phrases they use, weave them in. If they say what to avoid, avoid it.`
+    : '';
+
+  const keywordSection = keywords?.trim()
+    ? `\n\nTarget keywords to weave in naturally (no stuffing): ${keywords}. Use in title, description, and 2–3 times in the body where relevant.`
+    : '';
+
+  const systemPrompt = `You are ghostwriting a blog post on behalf of the creator. Your job is to make it sound EXACTLY like them — not like a generic AI blog post.
+
+Tone style: ${toneInstructions[tone] || toneInstructions.casual}${voiceSection}
+
+Blog post requirements:
 - 600–900 words (not counting frontmatter)
+- Open with a hook — a bold claim, surprising stat, or question that makes the reader lean in. NOT a restatement of the title.
+- 3–5 ## H2 sections, each a complete thought
+- Bullet points for lists of steps or tips
+- Bold key terms or takeaways
+- End with one concrete next step or call to action
+- Sound human and specific — real examples over vague generalities${keywordSection}
 
-Output format: Return ONLY raw markdown. Start directly with the YAML frontmatter block. No code fences, no preamble, no commentary.
+Output format: Return ONLY raw markdown. Start directly with the YAML frontmatter. No code fences, no preamble.
 
-Frontmatter schema:
 ---
 title: "Compelling, keyword-rich title (max 60 chars)"
 date: ${today}
-description: "One clear sentence, 150 chars max, SEO-friendly, includes primary keyword"
+description: "One clear sentence, 150 chars max, SEO-friendly"
 tags: ["tag1", "tag2", "tag3", "tag4"]
 draft: false
----
-
-After the frontmatter:
-- Open with a hook (stat, question, or bold claim) — NOT a restatement of the title
-- Use ## H2 headings to break up sections (3–5 sections)
-- Use bullet points for lists of steps or tips
-- Bold key terms or takeaways
-- End with a concrete next step or CTA
-- Naturally include the primary keyword 2–3 times in the body
-${keywords ? `- Target keywords to weave in naturally: ${keywords}. Use these in the title, description, headings, and body where relevant — never forced or keyword-stuffed.` : ''}`;
+---`;
 
   const userMessage = `Video title: ${title}
 Channel: ${author}
@@ -48,7 +58,7 @@ URL: ${url}
 Transcript:
 ${transcript.slice(0, 14000)}
 
-Write the SEO blog post.${keywords ? `\n\nTarget keywords: ${keywords}` : ''}`;
+Write the blog post in the creator's voice.`;
 
   try {
     const stream = await client.messages.stream({
@@ -65,10 +75,7 @@ Write the SEO blog post.${keywords ? `\n\nTarget keywords: ${keywords}` : ''}`;
       async start(controller) {
         try {
           for await (const chunk of stream) {
-            if (
-              chunk.type === 'content_block_delta' &&
-              chunk.delta.type === 'text_delta'
-            ) {
+            if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
               controller.enqueue(encoder.encode(chunk.delta.text));
             }
           }
