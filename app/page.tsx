@@ -30,13 +30,34 @@ const TONE_OPTIONS = [
   { id: 'storytelling', label: 'Storytelling', hint: 'narrative, immersive' },
 ];
 
+const SENTENCE_STYLES = [
+  { id: 'punchy', label: 'Short & punchy', hint: 'tight sentences, white space' },
+  { id: 'flowing', label: 'Flowing & rich', hint: 'layered, descriptive' },
+  { id: 'mixed', label: 'Mix of both', hint: 'varies with the moment' },
+];
+
+const LOVES_OPTIONS = [
+  'Personal stories', 'Hard stats & data', 'Analogies & metaphors',
+  'Rhetorical questions', 'Dry humour', 'Challenging assumptions',
+  'Real-world examples', 'Quoting experts',
+];
+
+const AVOIDS_OPTIONS = [
+  'Corporate jargon', 'Hedging language', 'Long-winded intros',
+  'Passive voice', 'Bullet point overload', 'Being preachy',
+  'Overly formal sign-offs', 'Vague generalities',
+];
+
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [url, setUrl] = useState('');
   const [keywords, setKeywords] = useState('');
   const [tone, setTone] = useState('casual');
-  const [voiceNotes, setVoiceNotes] = useState('');
+  const [sentenceStyle, setSentenceStyle] = useState('mixed');
+  const [loves, setLoves] = useState<string[]>([]);
+  const [avoids, setAvoids] = useState<string[]>([]);
+  const [writingSample, setWritingSample] = useState('');
   const [step, setStep] = useState<Step>('idle');
   const [error, setError] = useState('');
   const [data, setData] = useState<TranscriptData | null>(null);
@@ -86,7 +107,10 @@ export default function Home() {
           transcript: data.transcript,
           keywords: keywords.trim(),
           tone,
-          voiceNotes: voiceNotes.trim(),
+          sentenceStyle,
+          loves,
+          avoids,
+          writingSample: writingSample.trim(),
         }),
       });
       if (!res.ok) {
@@ -240,16 +264,82 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Free-form voice notes */}
+          {/* Sentence style */}
+          <div>
+            <label className="block text-xs font-semibold text-parchment/50 uppercase tracking-wider mb-2.5">Sentence Style</label>
+            <div className="grid grid-cols-3 gap-2">
+              {SENTENCE_STYLES.map(s => (
+                <button key={s.id} onClick={() => setSentenceStyle(s.id)} disabled={isLoading}
+                  className="px-3 py-2.5 rounded-xl border text-left transition-all"
+                  style={{
+                    borderColor: sentenceStyle === s.id ? '#C9A84C' : 'rgba(255,255,255,0.12)',
+                    background: sentenceStyle === s.id ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.04)',
+                  }}>
+                  <span className="block text-sm font-semibold" style={{ color: sentenceStyle === s.id ? '#C9A84C' : '#F5EFE0' }}>{s.label}</span>
+                  <span className="block text-xs mt-0.5" style={{ color: '#9B8FBF', opacity: 0.7 }}>{s.hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* I love to... */}
+          <div>
+            <label className="block text-xs font-semibold text-parchment/50 uppercase tracking-wider mb-2.5">
+              I love to… <span className="text-mist/40 font-normal normal-case">(pick all that fit)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {LOVES_OPTIONS.map(opt => {
+                const active = loves.includes(opt);
+                return (
+                  <button key={opt} onClick={() => setLoves(active ? loves.filter(x => x !== opt) : [...loves, opt])}
+                    disabled={isLoading}
+                    className="px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                    style={{
+                      background: active ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.05)',
+                      borderColor: active ? '#C9A84C' : 'rgba(255,255,255,0.12)',
+                      color: active ? '#C9A84C' : '#9B8FBF',
+                    }}>
+                    {active ? '✦ ' : ''}{opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* You'll never catch me... */}
+          <div>
+            <label className="block text-xs font-semibold text-parchment/50 uppercase tracking-wider mb-2.5">
+              You&apos;ll never catch me… <span className="text-mist/40 font-normal normal-case">(what to avoid)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {AVOIDS_OPTIONS.map(opt => {
+                const active = avoids.includes(opt);
+                return (
+                  <button key={opt} onClick={() => setAvoids(active ? avoids.filter(x => x !== opt) : [...avoids, opt])}
+                    disabled={isLoading}
+                    className="px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                    style={{
+                      background: active ? 'rgba(232,68,48,0.15)' : 'rgba(255,255,255,0.05)',
+                      borderColor: active ? 'rgba(232,68,48,0.5)' : 'rgba(255,255,255,0.12)',
+                      color: active ? '#E88478' : '#9B8FBF',
+                    }}>
+                    {active ? '✕ ' : ''}{opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Writing sample */}
           <div>
             <label className="block text-xs font-semibold text-parchment/50 uppercase tracking-wider mb-2">
-              Describe Your Voice <span className="text-mist/40 font-normal normal-case">(optional but powerful)</span>
+              Paste a Previous Writing Sample <span className="text-mist/40 font-normal normal-case">(optional — helps most)</span>
             </label>
             <textarea
-              value={voiceNotes}
-              onChange={(e) => setVoiceNotes(e.target.value)}
+              value={writingSample}
+              onChange={(e) => setWritingSample(e.target.value)}
               rows={4}
-              placeholder={`e.g. I write like I'm texting a smart friend — short sentences, no fluff. I use "here's the thing" and "let's be real" a lot. I reference real examples over abstract theory. I'm not afraid to have opinions. Avoid corporate-speak like "leverage" or "synergy".`}
+              placeholder="Paste a paragraph or two from your best writing — a caption, a LinkedIn post, a newsletter. Aira will mirror your rhythm and phrasing."
               className="w-full rounded-xl px-4 py-3 text-sm text-parchment placeholder-white/25 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30 transition resize-none leading-relaxed"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
               disabled={isLoading}
